@@ -4,6 +4,7 @@ local function defaults()
   return {
     decks_dir = vim.fn.stdpath("data") .. "/flashcard/decks",
     new_cards_per_day = 20,
+    picker = nil,
     keymaps = {
       reveal = "<Space>",
       again = "1",

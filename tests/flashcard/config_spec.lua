@@ -28,4 +28,20 @@ describe("config.setup", function()
     assert.truthy(c.decks_dir:match("^/"))
     assert.equals(0, (c.decks_dir:find("~") or 0))
   end)
+
+  it("defaults picker to nil (auto-detect)", function()
+    local c = config.setup(nil)
+    assert.is_nil(c.picker)
+  end)
+
+  it("preserves a string picker override", function()
+    local c = config.setup({ picker = "snacks" })
+    assert.equals("snacks", c.picker)
+  end)
+
+  it("preserves a function picker override", function()
+    local fn = function() end
+    local c = config.setup({ picker = fn })
+    assert.equals(fn, c.picker)
+  end)
 end)
