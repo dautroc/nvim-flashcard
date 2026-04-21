@@ -17,7 +17,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 ```lua
 {
-  "your-user/nvim-flashcard",
+  "dautroc/nvim-flashcard",
   opts = {},  -- see Configuration below
   cmd = "Flashcard",
 }
