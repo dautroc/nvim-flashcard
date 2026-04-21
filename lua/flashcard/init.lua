@@ -112,6 +112,32 @@ end
 --- for any existing external callers.
 M.learn = M.start
 
+--- Open a deck file for editing. If `deck_name` is nil, show the picker.
+function M.edit(deck_name)
+  ensure_cfg()
+  local decks = deck_mod.list(cfg.decks_dir)
+
+  if deck_name and deck_name ~= "" then
+    for _, d in ipairs(decks) do
+      if d.name == deck_name then
+        vim.cmd.edit(vim.fn.fnameescape(d.path))
+        return
+      end
+    end
+    vim.notify("[flashcard] deck not found: " .. deck_name, vim.log.levels.ERROR)
+    return
+  end
+
+  if #decks == 0 then
+    vim.notify("[flashcard] no decks found at " .. cfg.decks_dir, vim.log.levels.WARN)
+    return
+  end
+
+  picker_mod.pick(decks, { prompt = "Edit deck", cfg = cfg }, function(item)
+    vim.cmd.edit(vim.fn.fnameescape(item.path))
+  end)
+end
+
 --- Internal: list deck names (for :Flashcard tab completion).
 function M._deck_names()
   ensure_cfg()
