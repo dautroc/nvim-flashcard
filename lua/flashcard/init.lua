@@ -105,7 +105,7 @@ function M.start(deck_name)
     return
   end
 
-  picker_mod.pick(decks, start_session)
+  picker_mod.pick(decks, { prompt = "Study deck", cfg = cfg }, start_session)
 end
 
 --- Internal: list deck names (for :Flashcard tab completion).
