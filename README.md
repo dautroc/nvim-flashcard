@@ -10,6 +10,7 @@ Decks are plain markdown files you edit in the same editor you study in.
 - Centered floating-window review UI
 - Telescope-backed deck picker (falls back to `vim.ui.select`)
 - Per-deck JSON sidecar for scheduling state; your markdown is never modified
+- Subcommands: `:Flashcard learn`, `:Flashcard edit`, `:Flashcard create`
 
 ## Installation
 
@@ -31,6 +32,7 @@ Telescope is optional; without it, the picker uses `vim.ui.select`.
 require("flashcard").setup({
   decks_dir = vim.fn.stdpath("data") .. "/flashcard/decks",
   new_cards_per_day = 20,
+  picker = nil, -- nil=auto | "snacks" | "telescope" | "select" | function
   keymaps = {
     reveal = "<Space>",
     again  = "1",
@@ -45,28 +47,23 @@ require("flashcard").setup({
 
 ## Usage
 
-1. Create a deck file at `<decks_dir>/<name>.md`:
+- `:Flashcard` — open the picker, then start a study session on the chosen deck (bare form = learn).
+- `:Flashcard <deck-name>` — skip the picker; study the named deck.
+- `:Flashcard learn [<deck-name>]` — same as above; explicit verb form.
+- `:Flashcard edit [<deck-name>]` — open a deck markdown file in the current window. With no name, pick via the picker.
+- `:Flashcard create [<deck-name>]` — create a new deck (prompts for the name if omitted) and open it for editing. A small starter template is written on first creation. If the deck already exists, it's opened without overwriting.
 
-   ````markdown
-   # Geography (title is ignored)
+Tab completion:
 
-   What is the capital of France?
-   ?
-   Paris.
+- `:Flashcard <Tab>` → verbs (`learn`, `edit`, `create`) plus existing deck names.
+- `:Flashcard learn|edit <Tab>` → deck names.
+- `:Flashcard create <Tab>` → nothing (you're typing a new name).
 
-   ---
+Review keymaps:
 
-   What is the largest ocean?
-   ?
-   The Pacific.
-   ````
-
-2. Run `:Flashcard` to pick a deck, or `:Flashcard geography` to skip the picker.
-
-3. Review:
-   - `<Space>` reveals the back
-   - `1` / `2` / `3` / `4` rates the card (Again / Hard / Good / Easy)
-   - `q` closes the session
+- `<Space>` reveals the back
+- `1` / `2` / `3` / `4` rates the card (Again / Hard / Good / Easy)
+- `q` closes the session
 
 ## Deck format
 
