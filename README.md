@@ -8,7 +8,7 @@ Decks are plain markdown files you edit in the same editor you study in.
 - Markdown decks — one file per deck, `---` between cards, `?` between front and back
 - SM-2 scheduling with the familiar Again / Hard / Good / Easy ratings
 - Centered floating-window review UI
-- Telescope-backed deck picker (falls back to `vim.ui.select`)
+- Picker auto-detects snacks.nvim or telescope.nvim (falls back to `vim.ui.select`)
 - Per-deck JSON sidecar for scheduling state; your markdown is never modified
 - Subcommands: `:Flashcard learn`, `:Flashcard edit`, `:Flashcard create`
 
@@ -24,7 +24,7 @@ With [lazy.nvim](https://github.com/folke/lazy.nvim):
 }
 ```
 
-Telescope is optional; without it, the picker uses `vim.ui.select`.
+snacks.nvim or telescope.nvim are optional; without either, the picker uses `vim.ui.select`.
 
 ## Configuration
 
