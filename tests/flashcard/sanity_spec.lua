@@ -1,0 +1,5 @@
+describe("sanity", function()
+  it("runs plenary busted tests", function()
+    assert.equals(2, 1 + 1)
+  end)
+end)
