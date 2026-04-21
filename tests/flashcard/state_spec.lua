@@ -36,18 +36,12 @@ describe("state.save + load round trip", function()
 
   it("overwrites an existing sidecar", function()
     local deck_path = tmp_deck_path()
-    state.save(
-      deck_path,
-      {
-        a = { ease = 2.5, interval = 1, reps = 1, due = "2026-04-22", last_reviewed = "2026-04-21" },
-      }
-    )
-    state.save(
-      deck_path,
-      {
-        b = { ease = 2.0, interval = 2, reps = 2, due = "2026-04-23", last_reviewed = "2026-04-21" },
-      }
-    )
+    state.save(deck_path, {
+      a = { ease = 2.5, interval = 1, reps = 1, due = "2026-04-22", last_reviewed = "2026-04-21" },
+    })
+    state.save(deck_path, {
+      b = { ease = 2.0, interval = 2, reps = 2, due = "2026-04-23", last_reviewed = "2026-04-21" },
+    })
     local loaded = state.load(deck_path)
     assert.is_nil(loaded.a)
     assert.equals(2.0, loaded.b.ease)

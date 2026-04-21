@@ -116,7 +116,10 @@ function M.parse(path)
       end
       -- otherwise: silent intro; skip
     elseif front == "" or back == "" then
-      table.insert(warnings, "card has empty front or back (front=" .. #front .. " back=" .. #back .. ")")
+      table.insert(
+        warnings,
+        "card has empty front or back (front=" .. #front .. " back=" .. #back .. ")"
+      )
     else
       table.insert(cards, { id = util.hash(front), front = front, back = back })
     end
