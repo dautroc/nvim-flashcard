@@ -7,6 +7,27 @@ local picker_mod = require("flashcard.picker")
 local ui_mod = require("flashcard.ui")
 local util = require("flashcard.util")
 
+local CREATE_TEMPLATE = [[# %s
+
+<!--
+How to author cards:
+  - Separate cards with a line that is just '---'
+  - Within a card, separate front and back with a line that is just '?'
+  - Front/back may span multiple lines
+Delete this comment block once you're comfortable with the format.
+-->
+
+What is an example question?
+?
+An example answer.
+
+---
+
+Front of the second card
+?
+Back of the second card
+]]
+
 local M = {}
 
 local cfg
@@ -136,6 +157,79 @@ function M.edit(deck_name)
   picker_mod.pick(decks, { prompt = "Edit deck", cfg = cfg }, function(item)
     vim.cmd.edit(vim.fn.fnameescape(item.path))
   end)
+end
+
+local function validate_name(raw)
+  if type(raw) ~= "string" then
+    return nil, "expected string"
+  end
+  local name = raw:gsub("^%s+", ""):gsub("%s+$", "")
+  if name == "" then
+    return nil, "empty"
+  end
+  if name:find("[/\\]") then
+    return nil, "contains slash"
+  end
+  if name:sub(1, 1) == "." then
+    return nil, "starts with '.'"
+  end
+  if name:sub(-3) == ".md" then
+    return nil, "ends with '.md' (extension added automatically)"
+  end
+  return name
+end
+
+local function do_create(name)
+  local target = cfg.decks_dir .. "/" .. name .. ".md"
+
+  vim.fn.mkdir(cfg.decks_dir, "p")
+
+  if vim.fn.filereadable(target) == 1 then
+    vim.cmd.edit(vim.fn.fnameescape(target))
+    vim.notify("[flashcard] deck already exists — opened for editing", vim.log.levels.INFO)
+    return
+  end
+
+  local f, open_err = io.open(target, "w")
+  if not f then
+    vim.notify("[flashcard] failed to create deck: " .. tostring(open_err), vim.log.levels.ERROR)
+    return
+  end
+  local ok, write_err = pcall(function()
+    f:write(CREATE_TEMPLATE:format(name))
+  end)
+  f:close()
+  if not ok then
+    vim.notify("[flashcard] failed to create deck: " .. tostring(write_err), vim.log.levels.ERROR)
+    return
+  end
+
+  vim.cmd.edit(vim.fn.fnameescape(target))
+end
+
+--- Create a new deck (or open an existing one with the same name).
+--- If `deck_name` is nil, prompts via vim.ui.input.
+function M.create(deck_name)
+  ensure_cfg()
+
+  local function proceed(raw)
+    if raw == nil then
+      return -- cancelled; abort silently
+    end
+    local name, err = validate_name(raw)
+    if not name then
+      vim.notify("[flashcard] invalid deck name: " .. err, vim.log.levels.WARN)
+      return
+    end
+    do_create(name)
+  end
+
+  if deck_name ~= nil then
+    proceed(deck_name)
+    return
+  end
+
+  vim.ui.input({ prompt = "Deck name: " }, proceed)
 end
 
 --- Internal: list deck names (for :Flashcard tab completion).
