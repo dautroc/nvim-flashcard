@@ -108,6 +108,10 @@ function M.start(deck_name)
   picker_mod.pick(decks, { prompt = "Study deck", cfg = cfg }, start_session)
 end
 
+--- Alias: the canonical name going forward is `learn`. `start` is preserved
+--- for any existing external callers.
+M.learn = M.start
+
 --- Internal: list deck names (for :Flashcard tab completion).
 function M._deck_names()
   ensure_cfg()
