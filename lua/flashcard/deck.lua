@@ -25,4 +25,108 @@ function M.list(dir)
   return result
 end
 
+local util = require("flashcard.util")
+
+local function read_file(path)
+  local f = io.open(path, "r")
+  if not f then
+    return nil
+  end
+  local content = f:read("*a")
+  f:close()
+  return content
+end
+
+local function split_blocks(text)
+  -- A card block is delimited by a line that is exactly "---" (standalone hr).
+  local blocks = {}
+  local current = {}
+  for line in (text .. "\n"):gmatch("([^\n]*)\n") do
+    if line:match("^%-%-%-%s*$") then
+      table.insert(blocks, table.concat(current, "\n"))
+      current = {}
+    else
+      table.insert(current, line)
+    end
+  end
+  table.insert(blocks, table.concat(current, "\n"))
+  return blocks
+end
+
+local function split_front_back(block)
+  -- A line that is exactly "?" separates front and back.
+  -- Front is the last blank-line-separated paragraph before the "?" — this lets
+  -- a deck file start with "# Heading\n\nintro\n\nFront question\n?\nback" and
+  -- still parse the first card's front as just "Front question".
+  local lines = {}
+  for line in (block .. "\n"):gmatch("([^\n]*)\n") do
+    table.insert(lines, line)
+  end
+
+  local sep_idx
+  for i, line in ipairs(lines) do
+    if line:match("^%?%s*$") then
+      sep_idx = i
+      break
+    end
+  end
+  if not sep_idx then
+    return nil
+  end
+
+  local front_start = 1
+  for i = sep_idx - 1, 1, -1 do
+    if lines[i]:match("^%s*$") then
+      front_start = i + 1
+      break
+    end
+  end
+
+  local front_buf = {}
+  for i = front_start, sep_idx - 1 do
+    table.insert(front_buf, lines[i])
+  end
+  local back_buf = {}
+  for i = sep_idx + 1, #lines do
+    table.insert(back_buf, lines[i])
+  end
+
+  return util.trim(table.concat(front_buf, "\n")), util.trim(table.concat(back_buf, "\n"))
+end
+
+--- Parse a markdown deck file into cards.
+--- @param path string absolute path to the .md file
+--- @return table result { cards = [{id, front, back}], warnings = [], err = string? }
+function M.parse(path)
+  local content = read_file(path)
+  if not content then
+    return { err = "cannot read deck file: " .. path, cards = {}, warnings = {} }
+  end
+
+  local cards = {}
+  local warnings = {}
+  for _, block in ipairs(split_blocks(content)) do
+    local front, back = split_front_back(block)
+    if not front then
+      -- no `?` separator: either intro text before first card or malformed
+      local trimmed = util.trim(block)
+      if trimmed ~= "" and #cards > 0 then
+        -- we've already started cards, so this is a malformed card
+        table.insert(warnings, "card has no `?` separator")
+      end
+      -- otherwise: silent intro; skip
+    elseif front == "" or back == "" then
+      table.insert(warnings, "card has empty front or back (front=" .. #front .. " back=" .. #back .. ")")
+    else
+      table.insert(cards, { id = util.hash(front), front = front, back = back })
+    end
+  end
+
+  if #cards == 0 then
+    return { err = "no valid cards found in " .. path, cards = {}, warnings = warnings }
+  end
+
+  return { cards = cards, warnings = warnings }
+end
+
 return M
