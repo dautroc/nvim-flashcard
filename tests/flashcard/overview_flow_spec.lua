@@ -95,11 +95,13 @@ describe("flashcard.overview — by name", function()
     local second_row = ui_calls.ctx.rows[2] -- "What is 2+2?" at line 7
     assert.equals(7, second_row.front_line)
 
-    -- Invoke on_select; we can't call nvim_win_set_cursor on the test buffer's
-    -- active window meaningfully, but we can at least verify `vim.cmd.edit` is
-    -- called with the right path and that set_cursor doesn't error.
+    -- Stub edit and notify both — with edit stubbed, the buffer isn't actually
+    -- loaded, so nvim_win_set_cursor will fail and the pcall fallback will
+    -- emit a WARN. Capturing it keeps test stdout clean.
     local edits, restore_edit = stub_vim_cmd_edit()
+    local _, restore_notify = stub_vim_notify()
     ui_calls.ctx.on_select(second_row)
+    restore_notify()
     restore_edit()
 
     assert.equals(1, #edits)
