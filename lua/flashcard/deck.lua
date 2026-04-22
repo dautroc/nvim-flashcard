@@ -105,7 +105,7 @@ end
 
 --- Parse a markdown deck file into cards.
 --- @param path string absolute path to the .md file
---- @return table result { cards = [{id, front, back}], warnings = [], err = string? }
+--- @return table result { cards = [{id, front, back, front_line}], warnings = [], err = string? }
 function M.parse(path)
   local content = read_file(path)
   if not content then
