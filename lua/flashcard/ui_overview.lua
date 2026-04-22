@@ -2,7 +2,7 @@ local M = {}
 
 local ns = vim.api.nvim_create_namespace("flashcard_ui_overview")
 
-local COL_LAST = 13 -- "2026-04-22" + 3 padding, accommodates "never"
+local COL_LAST = 15 -- "2026-04-22" + 5 padding, accommodates "never" and leaves a visible gap in the header
 local COL_STATUS = 12 -- "scheduled" + padding
 
 local function center_size(frac_w, frac_h)
