@@ -1,6 +1,7 @@
 local M = {}
 
 local ns = vim.api.nvim_create_namespace("flashcard_ui_overview")
+vim.api.nvim_set_hl(0, "FlashcardKey", { link = "Special", default = true })
 
 local COL_LAST = 15 -- "2026-04-22" + 5 padding, accommodates "never" and leaves a visible gap in the header
 local COL_STATUS = 12 -- "scheduled" + padding
