@@ -1,5 +1,8 @@
 local M = {}
 
+local ns = vim.api.nvim_create_namespace("flashcard_ui")
+vim.api.nvim_set_hl(0, "FlashcardKey", { link = "Special", default = true })
+
 local function center_size(frac_w, frac_h)
   local columns = vim.o.columns
   local lines = vim.o.lines
@@ -33,9 +36,16 @@ local function open_float(cfg)
   return buf, win
 end
 
-local function render(buf, lines)
+local function render(buf, lines, highlights)
   vim.bo[buf].modifiable = true
   vim.api.nvim_buf_set_lines(buf, 0, -1, false, lines)
+  vim.api.nvim_buf_clear_namespace(buf, ns, 0, -1)
+  for _, h in ipairs(highlights or {}) do
+    vim.api.nvim_buf_set_extmark(buf, ns, h[1], h[2], {
+      end_col = h[3],
+      hl_group = "FlashcardKey",
+    })
+  end
   vim.bo[buf].modifiable = false
 end
 
@@ -47,17 +57,35 @@ local function split_lines(text)
   return out
 end
 
-local function front_lines(card, index, total)
-  local header = string.format("  Card %d of %d — press <Space> to reveal", index, total)
+local function front_lines(card, index, total, keymaps)
+  local prefix = string.format("  Card %d of %d — press ", index, total)
+  local header = prefix .. keymaps.reveal .. " to reveal"
+  local highlights = { { 0, #prefix, #prefix + #keymaps.reveal } }
   local lines = { header, "" }
   for _, l in ipairs(split_lines(card.front)) do
     table.insert(lines, l)
   end
-  return lines
+  return lines, highlights
 end
 
-local function both_lines(card, index, total)
-  local header = string.format("  Card %d of %d — 1:Again  2:Hard  3:Good  4:Easy", index, total)
+local function both_lines(card, index, total, keymaps)
+  local header = string.format("  Card %d of %d — ", index, total)
+  local parts = {
+    { keymaps.again, ":Again" },
+    { keymaps.hard, ":Hard" },
+    { keymaps.good, ":Good" },
+    { keymaps.easy, ":Easy" },
+  }
+  local highlights = {}
+  for i, p in ipairs(parts) do
+    local key_start = #header
+    header = header .. p[1]
+    table.insert(highlights, { 0, key_start, #header })
+    header = header .. p[2]
+    if i < #parts then
+      header = header .. "  "
+    end
+  end
   local lines = { header, "" }
   for _, l in ipairs(split_lines(card.front)) do
     table.insert(lines, l)
@@ -68,7 +96,7 @@ local function both_lines(card, index, total)
   for _, l in ipairs(split_lines(card.back)) do
     table.insert(lines, l)
   end
-  return lines
+  return lines, highlights
 end
 
 local function completion_lines(reviewed)
@@ -105,7 +133,8 @@ function M.run(cfg, hooks)
     current = hooks.next()
     revealed = false
     if current then
-      render(buf, front_lines(current.card, current.index, current.total))
+      local lines, hls = front_lines(current.card, current.index, current.total, cfg.keymaps)
+      render(buf, lines, hls)
     else
       render(buf, completion_lines(reviewed))
     end
@@ -114,7 +143,8 @@ function M.run(cfg, hooks)
   local function reveal()
     if current and not revealed then
       revealed = true
-      render(buf, both_lines(current.card, current.index, current.total))
+      local lines, hls = both_lines(current.card, current.index, current.total, cfg.keymaps)
+      render(buf, lines, hls)
     end
   end
 
