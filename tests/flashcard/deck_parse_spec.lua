@@ -64,3 +64,30 @@ describe("deck.parse — missing file", function()
     assert.truthy(result.err)
   end)
 end)
+
+describe("deck.parse — front_line", function()
+  local FIXTURES = vim.fn.getcwd() .. "/tests/fixtures"
+
+  it("records the front line of the first card in a simple deck", function()
+    local result = deck.parse(FIXTURES .. "/simple.md")
+    -- simple.md line 1 is "What is the capital of France?"
+    assert.equals(1, result.cards[1].front_line)
+  end)
+
+  it("records the front line of a card after a '---' separator", function()
+    local result = deck.parse(FIXTURES .. "/simple.md")
+    -- simple.md line 7 is "What is 2+2?"
+    assert.equals(7, result.cards[2].front_line)
+  end)
+
+  it("records the front line when a deck has heading and intro text", function()
+    local result = deck.parse(FIXTURES .. "/heading-and-intro.md")
+    -- heading-and-intro.md:
+    --   line 1 "# Geography"
+    --   line 3 "Some intro text..."
+    --   line 5 "What is the capital of France?"
+    --   line 11 "What is the largest ocean?"
+    assert.equals(5, result.cards[1].front_line)
+    assert.equals(11, result.cards[2].front_line)
+  end)
+end)

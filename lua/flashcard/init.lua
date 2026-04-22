@@ -5,6 +5,8 @@ local srs_mod = require("flashcard.srs")
 local scheduler_mod = require("flashcard.scheduler")
 local picker_mod = require("flashcard.picker")
 local ui_mod = require("flashcard.ui")
+local overview_mod = require("flashcard.overview")
+local ui_overview_mod = require("flashcard.ui_overview")
 local util = require("flashcard.util")
 
 local CREATE_TEMPLATE = [[# %s
@@ -230,6 +232,64 @@ function M.create(deck_name)
   end
 
   vim.ui.input({ prompt = "Deck name: " }, proceed)
+end
+
+local function open_overview(deck_info)
+  local parsed = deck_mod.parse(deck_info.path)
+  if parsed.err then
+    vim.notify("[flashcard] " .. parsed.err, vim.log.levels.ERROR)
+    return
+  end
+  for _, w in ipairs(parsed.warnings or {}) do
+    vim.notify("[flashcard] " .. deck_info.name .. ": " .. w, vim.log.levels.WARN)
+  end
+
+  local today = util.today()
+  local st = state_mod.load(deck_info.path)
+  local rows = overview_mod.build_rows(parsed.cards, st, today)
+
+  ui_overview_mod.run(cfg, {
+    deck_name = deck_info.name,
+    rows = rows,
+    on_select = function(row)
+      vim.cmd.edit(vim.fn.fnameescape(deck_info.path))
+      local ok = pcall(vim.api.nvim_win_set_cursor, 0, { row.front_line, 0 })
+      if not ok then
+        vim.notify(
+          "[flashcard] could not jump to line "
+            .. tostring(row.front_line)
+            .. " — deck file may have shrunk",
+          vim.log.levels.WARN
+        )
+        return
+      end
+      vim.cmd("normal! zz")
+    end,
+  })
+end
+
+--- Open the read-only overview for a deck. If `deck_name` is nil, show the picker.
+function M.overview(deck_name)
+  ensure_cfg()
+  local decks = deck_mod.list(cfg.decks_dir)
+
+  if deck_name and deck_name ~= "" then
+    for _, d in ipairs(decks) do
+      if d.name == deck_name then
+        open_overview(d)
+        return
+      end
+    end
+    vim.notify("[flashcard] deck not found: " .. deck_name, vim.log.levels.ERROR)
+    return
+  end
+
+  if #decks == 0 then
+    vim.notify("[flashcard] no decks found at " .. cfg.decks_dir, vim.log.levels.WARN)
+    return
+  end
+
+  picker_mod.pick(decks, { prompt = "Overview deck", cfg = cfg }, open_overview)
 end
 
 --- Internal: list deck names (for :Flashcard tab completion).

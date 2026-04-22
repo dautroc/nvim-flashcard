@@ -10,7 +10,7 @@ Decks are plain markdown files you edit in the same editor you study in.
 - Centered floating-window review UI
 - Picker auto-detects snacks.nvim or telescope.nvim (falls back to `vim.ui.select`)
 - Per-deck JSON sidecar for scheduling state; your markdown is never modified
-- Subcommands: `:Flashcard learn`, `:Flashcard edit`, `:Flashcard create`
+- Subcommands: `:Flashcard learn`, `:Flashcard edit`, `:Flashcard create`, `:Flashcard overview`
 
 ## Installation
 
@@ -52,11 +52,12 @@ require("flashcard").setup({
 - `:Flashcard learn [<deck-name>]` — same as above; explicit verb form.
 - `:Flashcard edit [<deck-name>]` — open a deck markdown file in the current window. With no name, pick via the picker.
 - `:Flashcard create [<deck-name>]` — create a new deck (prompts for the name if omitted) and open it for editing. A small starter template is written on first creation. If the deck already exists, it's opened without overwriting.
+- `:Flashcard overview [<deck-name>]` — open a read-only list of every card in the deck, sorted by how long since you last reviewed it (never-reviewed cards at the top). Press `<CR>` to jump to the card in the deck file; `q` to close.
 
 Tab completion:
 
-- `:Flashcard <Tab>` → verbs (`learn`, `edit`, `create`) plus existing deck names.
-- `:Flashcard learn|edit <Tab>` → deck names.
+- `:Flashcard <Tab>` → verbs (`learn`, `edit`, `create`, `overview`) plus existing deck names.
+- `:Flashcard learn|edit|overview <Tab>` → deck names.
 - `:Flashcard create <Tab>` → nothing (you're typing a new name).
 
 Review keymaps:

@@ -13,6 +13,8 @@ local function dispatch(opts)
     fc.edit(parsed.name)
   elseif parsed.verb == "create" then
     fc.create(parsed.name)
+  elseif parsed.verb == "overview" then
+    fc.overview(parsed.name)
   end
 end
 
@@ -41,6 +43,6 @@ end
 
 vim.api.nvim_create_user_command("Flashcard", dispatch, {
   nargs = "*",
-  desc = "Flashcard session — learn | edit | create (bare = learn)",
+  desc = "Flashcard session — learn | edit | create | overview (bare = learn)",
   complete = complete,
 })
