@@ -9,12 +9,17 @@ describe("command.parse", function()
     assert.same({ verb = "learn", name = nil }, command.parse({ "learn" }))
     assert.same({ verb = "edit", name = nil }, command.parse({ "edit" }))
     assert.same({ verb = "create", name = nil }, command.parse({ "create" }))
+    assert.same({ verb = "overview", name = nil }, command.parse({ "overview" }))
   end)
 
   it("takes the second arg as the deck name for known verbs", function()
     assert.same({ verb = "learn", name = "geography" }, command.parse({ "learn", "geography" }))
     assert.same({ verb = "edit", name = "geography" }, command.parse({ "edit", "geography" }))
     assert.same({ verb = "create", name = "spanish" }, command.parse({ "create", "spanish" }))
+    assert.same(
+      { verb = "overview", name = "geography" },
+      command.parse({ "overview", "geography" })
+    )
   end)
 
   it("treats a non-verb first arg as a deck name for backward compat", function()
@@ -31,7 +36,10 @@ describe("command.complete — position 1", function()
     local matches = command.complete("", names_fn)
     table.sort(matches)
     -- verbs + decks, sorted
-    assert.same({ "create", "edit", "geography", "history", "learn", "learning-theory" }, matches)
+    assert.same(
+      { "create", "edit", "geography", "history", "learn", "learning-theory", "overview" },
+      matches
+    )
   end)
 
   it("filters by prefix", function()
@@ -60,5 +68,11 @@ describe("command.complete_arg — position 2", function()
   it("returns nothing for create", function()
     assert.same({}, command.complete_arg("create", "", names_fn))
     assert.same({}, command.complete_arg("create", "spa", names_fn))
+  end)
+
+  it("returns deck names for overview", function()
+    local matches = command.complete_arg("overview", "", names_fn)
+    table.sort(matches)
+    assert.same({ "geography", "history" }, matches)
   end)
 end)
